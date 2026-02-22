@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # 🗄️ Database Service (MySQL)
+  db:
+    image: mysql:8.0
+    container_name: disease_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: disease_prediction
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  # ⚙️ Backend Service (Laravel API)
+  backend:
+    build: ./backend/backend
+    container_name: disease_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/backend:/var/www
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_HOST=db
+      - DB_DATABASE=disease_prediction
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - ML_SERVICE_URL=http://ml-service:8001
+    depends_on:
+      - db
+    networks:
+      - app-network
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  # 🧠 ML Service (Python/FastAPI)
+  ml-service:
+    build: ./ml-service
+    container_name: disease_ml
+    restart: always
+    ports:
+      - "8001:8001"
+    environment:
+      - ENV=production
+    networks:
+      - app-network
+
+  # 💻 Frontend Service (Vue/Vite)
+  frontend:
+    build: ./frontend
+    container_name: disease_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:
