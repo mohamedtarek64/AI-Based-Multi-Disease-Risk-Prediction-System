@@ -13,7 +13,7 @@ class MLPredictionService
     {
         $this->baseUrl = env('ML_SERVICE_URL', 'http://127.0.0.1:8001');
     }
-
+                                    
     public function getPrediction($disease, $data)
     {
         try {
