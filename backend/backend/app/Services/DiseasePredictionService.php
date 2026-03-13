@@ -22,17 +22,19 @@ class DiseasePredictionService
         if (!$result['success']) {
             return [
                 'status' => 'error',
-                'message' => 'ML Service Unavailable',
-                'code' => 503
+                'message' => $result['error'] ?? 'ML Service Unavailable',
+                'code' => $result['status_code'] ?? 503
             ];
         }
+
+        $predictionData = $result['data'];
 
         $prediction = $this->repository->create([
             'disease_type' => $disease,
             'input_data' => $validatedData,
-            'risk_score' => $result['risk_score'],
-            'risk_level' => $result['risk_level'],
-            'prediction_result' => $result
+            'risk_score' => $predictionData['risk_score'],
+            'risk_level' => $predictionData['risk_level'],
+            'prediction_result' => $predictionData
         ]);
 
         return [

@@ -9,8 +9,11 @@ class PredictionRepository
 {
     public function create(array $data)
     {
+        // Try to get authenticated user, then any user, or finally null
+        $userId = Auth::id() ?: (\App\Models\User::first()?->id);
+
         return Prediction::create([
-            'user_id' => Auth::id() ?? 1,
+            'user_id' => $userId,
             'disease_type' => $data['disease_type'],
             'input_data' => $data['input_data'],
             'risk_score' => $data['risk_score'],

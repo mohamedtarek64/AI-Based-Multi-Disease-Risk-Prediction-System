@@ -19,4 +19,5 @@ Route::prefix('v1')->group(function () {
     Route::post('/predict/{disease}', [PredictionController::class, 'predict']);
     Route::get('/predictions/history', [PredictionController::class, 'getHistory']);
     Route::get('/predictions/{id}', [PredictionController::class, 'show']);
+    Route::get('/predictions/{id}/download', [PredictionController::class, 'downloadReport']);
 });

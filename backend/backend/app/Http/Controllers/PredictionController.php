@@ -8,7 +8,15 @@ use App\Services\DiseasePredictionService;
 use App\Models\Prediction;
 use Illuminate\Support\Facades\Auth;
 use App\Repositories\PredictionRepository;
+use Barryvdh\DomPDF\Facade\Pdf;
 
+/**
+ * @OA\Info(
+ *     title="AI Disease Prediction API",
+ *     version="2.0.0",
+ *     description="Mega-Scale Machine Learning system for disease risk assessment."
+ * )
+ */
 class PredictionController extends Controller
 {
     protected $predictionService;
@@ -128,14 +136,33 @@ class PredictionController extends Controller
 
     public function getHistory()
     {
+        $userId = Auth::id() ?: (\App\Models\User::first()?->id);
+        
         return response()->json([
-            'data' => $this->repository->getHistoryByUserId(Auth::id() ?? 1)
+            'data' => $this->repository->getHistoryByUserId($userId)
         ]);
     }
 
     public function show($id)
     {
-        $prediction = $this->repository->findByIdAndUserId($id, Auth::id() ?? 1);
+        $prediction = $this->repository->findByIdAndUserId($id, Auth::id() ?: (\App\Models\User::first()?->id));
         return response()->json(['status' => 'success', 'data' => $prediction]);
+    }
+
+    /**
+     * Generate and download a PDF medical report
+     */
+    public function downloadReport($id)
+    {
+        $prediction = Prediction::with('user')->findOrFail($id);
+
+        // Security check
+        if (Auth::check() && $prediction->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $pdf = Pdf::loadView('reports.prediction', compact('prediction'));
+        
+        return $pdf->download("medical_report_{$prediction->id}.pdf");
     }
 }
